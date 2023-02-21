@@ -4,10 +4,10 @@ OBJECTS = writer.o
 default: writer
 
 %.o: %.c $(HEADERS)
-	gcc -c $< -o $@
+	$(CC) -c $< -o $@
 
 writer: $(OBJECTS)
-	gcc $(OBJECTS) -o $@
+	$(CC) $(OBJECTS) -o $@
 
 clean:
 	-rm -f $(OBJECTS)
