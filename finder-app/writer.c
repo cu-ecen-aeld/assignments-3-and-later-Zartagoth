@@ -22,11 +22,20 @@ int main (int argc, char *argv[]) {
 
         return 1;
     } else {
-        printf("Write %s on %s.\n", writestr, writefile);
+        // Write to log file
+        syslog(LOG_DEBUG, "Writing %s to %s.", writestr, writefile);
     }
 
-    // Write to log file
-    syslog(LOG_DEBUG, "Writing %s to %s.", writestr, writefile);
+    FILE* fd = fopen(writefile, "w");
+
+    if (fd == NULL) {
+        // Log error to syslog
+        syslog(LOG_ERR, "Error opening file.");
+    }
+
+    fprintf(fd, "%s", writestr);
+
+    fclose(fd);
 
     return 0;
 }

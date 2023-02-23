@@ -1,14 +1,16 @@
-HEADERS =
+TARGET = writer
 OBJECTS = writer.o
 
-default: writer
+CROSS_COMPILE :=
+CC := $(CROSS_COMPILE)gcc
+
+default: $(TARGET)
 
 %.o: %.c $(HEADERS)
 	$(CC) -c $< -o $@
 
-writer: $(OBJECTS)
+$(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -o $@
 
 clean:
-	-rm -f $(OBJECTS)
-	-rm -f writer
+	-rm -f $(OBJECTS) $(TARGET)
