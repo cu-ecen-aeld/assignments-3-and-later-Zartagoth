@@ -1,4 +1,7 @@
 #include "systemcalls.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -16,6 +19,12 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
+    bool ret;
+
+    ret = system(cmd);
+    if (ret) {
+        return false;
+    }
 
     return true;
 }
@@ -58,6 +67,25 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    pid_t pid = fork();
+
+    if (pid == -1) {
+        printf("Failed to fork()\n");
+
+        return false;
+    }
+
+    if (pid > 0) {
+        int status;
+        // Wait for child process to finish
+        waitpid(pid, &status, 0);
+    } else {
+        if (execv(command[0], &command[1]) == -1) {
+            printf("Execv failed\n");
+            
+            return false;
+        }
+    }
 
     va_end(args);
 
