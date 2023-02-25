@@ -1,16 +1,14 @@
 TARGET = writer
-OBJECTS = writer.o
+SRC := writer.c 
+OBJECTS := $(SRC:.c=.o)
 
 CROSS_COMPILE :=
 CC := $(CROSS_COMPILE)gcc
 
 default: $(TARGET)
 
-%.o: %.c $(HEADERS)
-	$(CC) -c $< -o $@
-
-$(TARGET): $(OBJECTS)
-	$(CC) $(OBJECTS) -o $@
+$(TARGET) : $(OBJECTS)
+	$(CC) $(CFLAGS) $(INCLUDES) $(OBJECTS) -o $(TARGET) $(LDFLAGS)
 
 clean:
-	-rm -f $(OBJECTS) $(TARGET)
+	-rm -f *.o $(TARGET) *.elf *.map

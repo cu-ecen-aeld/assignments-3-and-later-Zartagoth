@@ -17,25 +17,26 @@ int main (int argc, char *argv[]) {
 
     if (argc  < 2 || writefile == NULL || writestr == NULL) {
         printf("No arguments provided or they are null.\n");
-        // Log error to syslog
         syslog(LOG_ERR, "No arguments provided or they are null.");
 
         return 1;
-    } else {
-        // Write to log file
-        syslog(LOG_DEBUG, "Writing %s to %s.", writestr, writefile);
     }
 
     FILE* fd = fopen(writefile, "w");
 
     if (fd == NULL) {
+        printf("Error opening file.\n");
         // Log error to syslog
         syslog(LOG_ERR, "Error opening file.");
+
+        return 1;
+    } else {
+        fprintf(fd, "%s", writestr);
+        // Write to log file
+        syslog(LOG_DEBUG, "Writing %s to %s.", writestr, writefile);
+        printf("Writing %s to %s.", writestr, writefile);
+        fclose(fd);
     }
-
-    fprintf(fd, "%s", writestr);
-
-    fclose(fd);
 
     return 0;
 }
