@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <string.h>
 
 /**
  * @param cmd the command to execute with system()
@@ -19,10 +21,9 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-    bool ret;
 
-    ret = system(cmd);
-    if (ret) {
+    if (system(cmd) == -1) {
+        perror("Error system(): ");
         return false;
     }
 
@@ -67,29 +68,44 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
-    pid_t pid = fork();
+    va_end(args);
 
-    if (pid == -1) {
-        printf("Failed to fork()\n");
 
+    pid_t cpid, w;
+    int status;
+
+    cpid = fork();
+    if (cpid == -1) {
+        perror("fork");
         return false;
     }
 
-    if (pid > 0) {
-        int status;
-        // Wait for child process to finish
-        waitpid(pid, &status, 0);
-    } else {
-        if (execv(command[0], &command[1]) == -1) {
-            printf("Execv failed\n");
-            
-            return false;
+   if (cpid == 0) {            /* Code executed by child */
+        if (execv(command[0], command)) {
+            perror("Error execv(): ");
         }
+        exit(EXIT_FAILURE);
+   } else {                    /* Code executed by parent */
+        do {
+            w = waitpid(cpid, &status, WUNTRACED | WCONTINUED);
+            if (w == -1) {
+                perror("waitpid");
+                return false;
+            }
+
+           if (WIFEXITED(status)) {
+                printf("exited, status=%d\n", WEXITSTATUS(status));
+            } else if (WIFSIGNALED(status)) {
+                printf("killed by signal %d\n", WTERMSIG(status));
+            } else if (WIFSTOPPED(status)) {
+                printf("stopped by signal %d\n", WSTOPSIG(status));
+            } else if (WIFCONTINUED(status)) {
+                printf("continued\n");
+            }
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        return (WEXITSTATUS(status) == EXIT_SUCCESS);
     }
-
-    va_end(args);
-
-    return true;
+    return false;
 }
 
 /**
@@ -123,5 +139,48 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
 
     va_end(args);
 
-    return true;
+    pid_t cpid, w;
+    int status;
+    int fd = open(outputfile, O_WRONLY|O_TRUNC|O_CREAT, 0644);
+
+    cpid = fork();
+    if (cpid == -1) {
+        perror("fork");
+        return false;
+    }
+
+   if (cpid == 0) {            /* Code executed by child */
+        if (dup2(fd, 1) < 0) {
+            perror("dup2");
+            abort();
+            }
+        close(fd);
+        execvp(command[0], command);
+        perror("execvp");
+        abort();
+        exit(EXIT_FAILURE);
+   } else {                    /* Code executed by parent */
+        do {
+            w = waitpid(cpid, &status, WUNTRACED | WCONTINUED);
+            if (w == -1) {
+                perror("waitpid");
+                return false;
+            }
+
+           if (WIFEXITED(status)) {
+                printf("exited, status=%d\n", WEXITSTATUS(status));
+            } else if (WIFSIGNALED(status)) {
+                printf("killed by signal %d\n", WTERMSIG(status));
+            } else if (WIFSTOPPED(status)) {
+                printf("stopped by signal %d\n", WSTOPSIG(status));
+            } else if (WIFCONTINUED(status)) {
+                printf("continued\n");
+            }
+        } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+        return (WEXITSTATUS(status) == EXIT_SUCCESS);
+    }
+
+    close(fd);
+
+    return false;
 }
