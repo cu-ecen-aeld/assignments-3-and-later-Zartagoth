@@ -46,35 +46,46 @@ echo "Adding the Image in outdir"
 
 echo "Creating the staging directory for the root filesystem"
 cd "$OUTDIR"
-if [ -d "${OUTDIR}/rootfs" ]
-then
-	echo "Deleting rootfs directory at ${OUTDIR}/rootfs and starting over"
-    sudo rm  -rf ${OUTDIR}/rootfs
-else
-    # TODO: Create necessary base directories
-    mkdir rootfs
-    cd rootfs
-    mkdir -p bin dev etc home lib lib64 proc sbin sys tmp usr var
-    mkdir -p usr/bin usr/sbin
-    mkdir -p var/log
-fi
+# if [ -d "${OUTDIR}/rootfs" ]
+# then
+# 	echo "Deleting rootfs directory at ${OUTDIR}/rootfs and starting over"
+#     sudo rm  -rf ${OUTDIR}/rootfs
+# fi
+
+# TODO: Create necessary base directories
+mkdir -p rootfs
+cd rootfs
+mkdir -p bin dev etc home lib lib64 proc sbin sys tmp usr var
+mkdir -p usr/bin usr/sbin
+mkdir -p var/log
 
 cd "$OUTDIR"
-if [ ! -d "${OUTDIR}/busybox" ]
-then
-    git clone git://busybox.net/busybox.git
+# if [ ! -d "${OUTDIR}/busybox" ]
+# then
+#     git clone git://busybox.net/busybox.git
+#     cd busybox
+#     git checkout ${BUSYBOX_VERSION}
+#     # TODO:  Configure busybox
+# else
     cd busybox
-    git checkout ${BUSYBOX_VERSION}
-    # TODO:  Configure busybox
-else
-    cd busybox
-fi
+# fi
 
 # TODO: Make and install busybox
+# make distclean
+# make defconfig
+# make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}
+# make CONFIG_PREFIX=$OUTDIR/rootfs ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} install
 
 echo "Library dependencies"
-${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter"
-${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
+cd $OUTDIR/rootfs
+program_interpreter=$(${CROSS_COMPILE}readelf -a bin/busybox | grep "program interpreter")
+shared_library=$(${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library")
+
+program_interpreter=$(echo $program_interpreter | cut -d ":" -f2 | cut -d "]" -f1)
+
+# echo $program_interpreter
+
+echo "||| $shared_library |||"
 
 # TODO: Add library dependencies to rootfs
 
