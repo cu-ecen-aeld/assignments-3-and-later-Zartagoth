@@ -83,9 +83,14 @@ shared_library=$(${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library")
 
 program_interpreter=$(echo $program_interpreter | cut -d ":" -f2 | cut -d "]" -f1)
 
-# echo $program_interpreter
+echo $program_interpreter
 
-echo "||| $shared_library |||"
+while IFS= read -r line; do
+    echo $line | cut -d "[" -f2 | cut -d "]" -f1
+done <<< "$shared_library"
+
+# aarch64-none-linux-gnu-gcc -print-sysroot
+/home/joao/toolchains/gcc-arm-10.2-2020.11-x86_64-aarch64-none-linux-gnu/bin/../aarch64-none-linux-gnu/libc
 
 # TODO: Add library dependencies to rootfs
 
