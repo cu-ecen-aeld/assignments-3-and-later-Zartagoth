@@ -107,20 +107,22 @@ then
 fi
 
 # TODO: Clean and build the writer utility
+cd $current_dir
 make clean
 make
 
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
-cp $current_dir/writer home/
-cp $current_dir/autorun-qemu.sh home/
-cp $current_dir/finder.sh home/
-cp $current_dir/finder-test.sh home/
-cp -r $current_dir/conf/ home/
+cp $current_dir/writer $OUTDIR/rootfs/home/
+cp $current_dir/autorun-qemu.sh $OUTDIR/rootfs/home/
+cp $current_dir/finder.sh $OUTDIR/rootfs/home/
+cp $current_dir/finder-test.sh $OUTDIR/rootfs/home/
+cp -r $current_dir/conf/ $OUTDIR/rootfs/home/
 
 # TODO: Chown the root directory
 sudo chown -R root:root $OUTDIR/rootfs
 
 # TODO: Create initramfs.cpio.gz
+cd $OUTDIR
 find . | cpio -H newc -ov --owner root:root > $OUTDIR/initramfs.cpio
 gzip -f initramfs.cpio
